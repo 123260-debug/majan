@@ -88,27 +88,43 @@ function send(){for(let s=0;s<4;s++){if(bots[s])continue;const v=view(s);if(s==0
 function A(a){if(isHost)act(0,a);else hc.send({t:'a',a})}
 
 /* ---------- 通信(PeerJS: 部屋コード方式) ---------- */
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]};
+const ERR={'peer-unavailable':'その部屋コードの部屋が見つかりません。コードと、ホストが待機中かを確認してください','network':'PeerJSサーバーに接続できません。少し待って再試行してください','server-error':'PeerJSサーバーが応答しません','socket-error':'サーバーとの通信に失敗しました','webrtc':'WebRTC通信のエラーです','browser-incompatible':'このブラウザは対応していません'};
+function note(t,bad){const e=$('#nt');if(e){e.textContent=t;e.style.color=bad?'#ff9a8a':'#b9e6b0'}else alert(t)}
 function setName(){names[0]=esc($('#nm')&&$('#nm').value)||'あなた'}
-function host(){setName();isHost=true;me=0;tryRoom()}
-function tryRoom(){room=''+(1000+Math.random()*9000|0);if(peer)peer.destroy();peer=new Peer('mjrm-'+room);
- peer.on('error',e=>{if(e.type=='unavailable-id')tryRoom();else alert('接続エラー: '+e.type)});
- peer.on('open',()=>{$('#rm').textContent='部屋コード '+room;lobby()});
- peer.on('connection',c=>{const s=[1,2,3].find(i=>!seatConn[i]);if(!s||G){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),300)});return}
+let hostTm;
+function host(){setName();if(typeof Peer==='undefined')return note('通信ライブラリ(PeerJS)を読み込めませんでした。ネット接続を確認して再読み込みしてください',1);
+ isHost=true;me=0;note('部屋を作成中…');clearTimeout(hostTm);
+ hostTm=setTimeout(()=>{if(!$('#rm').textContent){isHost=false;if(peer)peer.destroy();lobby();note('部屋を作れません。PeerJSの公開サーバーに接続できていません。少し待って再試行するか、「ひとりで遊ぶ」をお使いください',1)}},12000);
+ tryRoom()}
+function solo(){setName();isHost=true;me=0;room='';start()}
+function tryRoom(){room=''+(1000+Math.random()*9000|0);if(peer)peer.destroy();peer=new Peer('mjrm-'+room,{config:ICE});
+ peer.on('error',e=>{if(e.type=='unavailable-id')return tryRoom();isHost=false;lobby();note('エラー: '+(ERR[e.type]||e.type),1)});
+ peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
+ peer.on('open',()=>{clearTimeout(hostTm);$('#rm').textContent='部屋コード '+room;lobby()});
+ peer.on('connection',c=>{const s=[1,2,3].find(i=>!seatConn[i]);
+  if(!s||G){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),300)});return}
   c.on('open',()=>{seatConn[s]=c;bots[s]=0;names[s]=esc(c.metadata&&c.metadata.name)||'プレイヤー'+s;c.send({t:'seat',s});lobby()});
   c.on('data',m=>{if(m.t=='a')act(s,m.a)});
-  c.on('close',()=>{delete seatConn[s];bots[s]=1;names[s]='CPU'+s;lobby();if(G){send();if(G.ph=='d'||G.ph=='c')bot()}})})}
-function join(){setName();const code=$('#code').value.trim();
- peer=new Peer();peer.on('error',e=>alert('入室できません: '+e.type));
- peer.on('open',()=>{hc=peer.connect('mjrm-'+code,{metadata:{name:names[0]}});
-  hc.on('data',m=>{if(m.t=='seat'){me=m.s;room=code;$('#rm').textContent='部屋コード '+code;$('#lb').innerHTML=shell('<h3>入室しました</h3><p>ホストの開始を待っています…</p>')}
-   if(m.t=='full')alert('満席、または開始済みです');
+  c.on('close',()=>{if(seatConn[s]!==c)return;delete seatConn[s];bots[s]=1;names[s]='CPU'+s;lobby();if(G){send();if(G.ph=='d'||G.ph=='c')bot()}})})}
+function join(){setName();const code=($('#code').value||'').trim();
+ if(!/^\d{4}$/.test(code))return note('4桁の部屋コードを入力してください',1);
+ note('接続中…');let ok=0,inRoom=0;if(peer)peer.destroy();peer=new Peer({config:ICE});
+ const tm=setTimeout(()=>{if(!ok){note('接続できませんでした。コードとホストの待機状態を確認してください。回線が違う相手とは繋がらない場合があります',1);peer.destroy()}},15000);
+ peer.on('error',e=>{clearTimeout(tm);note('入室できません: '+(ERR[e.type]||e.type),1)});
+ peer.on('open',()=>{note('部屋を探しています…');hc=peer.connect('mjrm-'+code,{metadata:{name:names[0]},reliable:true});
+  hc.on('open',()=>{ok=1;clearTimeout(tm);note('入室処理中…')});
+  hc.on('error',e=>note('通信エラー: '+e,1));
+  hc.on('data',m=>{ok=1;clearTimeout(tm);
+   if(m.t=='seat'){inRoom=1;me=m.s;room=code;$('#rm').textContent='部屋コード '+code;$('#lb').innerHTML=shell('<h3>入室しました</h3><p>ホストの開始を待っています…</p>')}
+   if(m.t=='full')note('満席、または対局が始まっています',1);
    if(m.t=='v'){$('#lb').style.display='none';render(m.v)}});
-  hc.on('close',()=>alert('ホストとの接続が切れました'))})}
+  hc.on('close',()=>{if(inRoom)alert('ホストとの接続が切れました。ページを再読み込みしてください')})})}
 function start(){G={sc:[25000,25000,25000,25000],dealer:0,kyoku:0,pot:0};$('#lb').style.display='none';newK()}
 function dec(){return [[33,'5%','10%',-12],[4,'86%','16%',10],[31,'9%','68%',8],[27,'84%','66%',-8],[13,'44%','84%',5],[22,'48%','2%',-6],[12,'70%','40%',14],[0,'20%','38%',-16]].map(([k,l,t,r])=>`<span class="dc" style="left:${l};top:${t};transform:rotate(${r}deg);color:${col(k)}">${ch(k)}</span>`).join('')}
-function shell(x){return dec()+`<div class="box"><h1>麻雀</h1><div class="sub">オンライン対戦</div>${x}</div>`}
+function shell(x){return dec()+`<div class="box"><h1>麻雀</h1><div class="sub">オンライン対戦</div>${x}<div id="nt" class="nt"></div></div>`}
 function lobby(){const L=$('#lb');if(G)return;
- if(!isHost){L.innerHTML=shell(`<input id="nm" placeholder="あなたの名前" maxlength="8"><div class="two"><div><h3>部屋を作る</h3><p style="margin:0 0 12px">友達を招待します</p><button onclick="host()">部屋を作る</button></div><i></i><div><h3>部屋に入る</h3><input id="code" placeholder="部屋コード4桁" maxlength="4"><button onclick="join()">入室</button></div></div><p>空席はCPUが入ります</p>`);return}
+ if(!isHost){L.innerHTML=shell(`<input id="nm" placeholder="あなたの名前" maxlength="8"><div class="two"><div><h3>部屋を作る</h3><p style="margin:0 0 12px">友達を招待します</p><button onclick="host()">部屋を作る</button><p style="margin-top:14px"><button onclick="solo()" style="background:linear-gradient(#4aa0d8,#216aa0);box-shadow:0 3px 0 #123e60">ひとりで遊ぶ(CPU対戦)</button></p></div><i></i><div><h3>部屋に入る</h3><input id="code" placeholder="部屋コード4桁" maxlength="4"><button onclick="join()">入室</button></div></div><p>空席はCPUが入ります</p>`);return}
  L.innerHTML=shell(`<h3>部屋コード</h3><div class="code">${room}</div><div class="seats">${names.map((n,i)=>`<div class="seat${i==0?' me':''}"><b>${W[i]}</b>${n}<br><span>${bots[i]?'CPU':'プレイヤー'}</span></div>`).join('')}</div><button onclick="start()">対局開始</button><p>このコードを友達に伝えてください</p>`)}
 
 /* ---------- 描画(画像のレイアウトに合わせる) ---------- */
