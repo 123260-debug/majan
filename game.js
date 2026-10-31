@@ -100,14 +100,16 @@ function tryRoom(){room=''+(1000+Math.random()*9000|0);if(peer)peer.destroy();pe
 function join(){setName();const code=$('#code').value.trim();
  peer=new Peer();peer.on('error',e=>alert('入室できません: '+e.type));
  peer.on('open',()=>{hc=peer.connect('mjrm-'+code,{metadata:{name:names[0]}});
-  hc.on('data',m=>{if(m.t=='seat'){me=m.s;room=code;$('#rm').textContent='部屋コード '+code;$('#lb').innerHTML='<div class="box"><h2>入室しました</h2><p>ホストの開始を待っています…</p></div>'}
+  hc.on('data',m=>{if(m.t=='seat'){me=m.s;room=code;$('#rm').textContent='部屋コード '+code;$('#lb').innerHTML=shell('<h3>入室しました</h3><p>ホストの開始を待っています…</p>')}
    if(m.t=='full')alert('満席、または開始済みです');
    if(m.t=='v'){$('#lb').style.display='none';render(m.v)}});
   hc.on('close',()=>alert('ホストとの接続が切れました'))})}
 function start(){G={sc:[25000,25000,25000,25000],dealer:0,kyoku:0,pot:0};$('#lb').style.display='none';newK()}
-function lobby(){const L=$('#lb');if(G){return}
- if(!isHost){L.innerHTML=`<div class="box"><h2>麻雀オンライン</h2><input id="nm" placeholder="名前" maxlength="8"><button onclick="host()">部屋を作る</button><hr><input id="code" placeholder="部屋コード(4桁)" maxlength="4"><button onclick="join()">入室</button><p style="font-size:12px">空席はCPUが入ります</p></div>`;return}
- L.innerHTML=`<div class="box"><h2>部屋コード ${room}</h2><ul>${names.map((n,i)=>`<li>${W[i]}家:${n}${bots[i]?'(CPU)':''}</li>`).join('')}</ul><button onclick="start()">対局開始</button><p style="font-size:12px">友達にコードを伝えてください</p></div>`}
+function dec(){return [[33,'5%','10%',-12],[4,'86%','16%',10],[31,'9%','68%',8],[27,'84%','66%',-8],[13,'44%','84%',5],[22,'48%','2%',-6],[12,'70%','40%',14],[0,'20%','38%',-16]].map(([k,l,t,r])=>`<span class="dc" style="left:${l};top:${t};transform:rotate(${r}deg);color:${col(k)}">${ch(k)}</span>`).join('')}
+function shell(x){return dec()+`<div class="box"><h1>麻雀</h1><div class="sub">オンライン対戦</div>${x}</div>`}
+function lobby(){const L=$('#lb');if(G)return;
+ if(!isHost){L.innerHTML=shell(`<input id="nm" placeholder="あなたの名前" maxlength="8"><div class="two"><div><h3>部屋を作る</h3><p style="margin:0 0 12px">友達を招待します</p><button onclick="host()">部屋を作る</button></div><i></i><div><h3>部屋に入る</h3><input id="code" placeholder="部屋コード4桁" maxlength="4"><button onclick="join()">入室</button></div></div><p>空席はCPUが入ります</p>`);return}
+ L.innerHTML=shell(`<h3>部屋コード</h3><div class="code">${room}</div><div class="seats">${names.map((n,i)=>`<div class="seat${i==0?' me':''}"><b>${W[i]}</b>${n}<br><span>${bots[i]?'CPU':'プレイヤー'}</span></div>`).join('')}</div><button onclick="start()">対局開始</button><p>このコードを友達に伝えてください</p>`)}
 
 /* ---------- 描画(画像のレイアウトに合わせる) ---------- */
 function render(v){V=v;const p=i=>(i-v.me+4)%4,at=v.ph=='d'&&v.turn==v.me,o=v.o||{};
