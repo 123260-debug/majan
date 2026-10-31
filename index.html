@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>『死校』受付ー整理券番号発行</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@800&display=swap');
+
+        body {
+            font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+            background-color: #050505;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            padding-top: 130px;
+            padding-left: 320px;
+            padding-right: 330px;
+            padding-bottom: 120px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('logo.jpg');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.12;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1;
+        }
+
+        .card {
+            background: rgba(12, 12, 12, 0.92);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #a00000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        h2, h3, .notice-box li, .ticket-result {
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+
+        .word-chunk {
+            display: inline-block;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: #ff3333;
+            text-align: center;
+            letter-spacing: 3px;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px #000, 0 0 10px #ff0000;
+            font-weight: 800;
+        }
+
+        .notice-box {
+            background: rgba(30, 0, 0, 0.6);
+            border: 1px dashed #ff4d4d;
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: #ffcccc;
+            line-height: 1.7;
+        }
+
+        .notice-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .notice-box li {
+            margin-bottom: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        label {
+            font-size: 1.05rem;
+            color: #ff8888;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .input-field {
+            padding: 12px;
+            font-size: 1.1rem;
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #880000;
+            border-radius: 6px;
+            box-sizing: border-box;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .fixed-top-left {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(15, 0, 0, 0.95);
+            padding: 18px;
+            border-radius: 12px;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+            z-index: 200;
+            width: 280px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .fixed-top-left::-webkit-scrollbar {
+            width: 8px;
+        }
+        .fixed-top-left::-webkit-scrollbar-thumb {
+            background: #880000;
+            border-radius: 4px;
+        }
+
+        .fixed-top-left .title {
+            font-size: 1.25rem;
+            color: #ff8888;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            position: sticky;
+            top: 0;
+            background: rgba(15, 0, 0, 0.95);
+            letter-spacing: 2px;
+        }
+
+        .wait-list-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 0;
+            border-bottom: 1px dashed rgba(255, 0, 0, 0.3);
+        }
+
+        .wait-list-item .row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wait-list-item .num {
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .wait-list-item .name {
+            color: #ffffff;
+            font-size: 1.1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 130px;
+        }
+
+        .wait-list-item .wait-time {
+            font-size: 0.95rem;
+            color: #ffaaaa;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .wait-list-item.calling {
+            background: rgba(0, 255, 102, 0.08);
+            border-left: 4px solid #00ff66;
+            padding-left: 8px;
+        }
+
+        .wait-list-item.calling .num,
+        .wait-list-item.calling .wait-time {
+            color: #00ff66;
+        }
+
+        .fixed-right-container {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            bottom: 20px;
+            width: 290px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .fixed-right-container > * {
+            pointer-events: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .fixed-top-right {
+            background: rgba(15, 0, 0, 0.95);
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 3px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+            text-align: center;
+        }
+
+        .fixed-top-right .title {
+            font-size: 1.1rem;
+            color: #ffaaaa;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .fixed-top-right .number {
+            font-size: 4.5rem;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000;
+            line-height: 1;
+            margin-top: 5px;
+        }
+
+        .fixed-logo-middle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .right-panel-logo {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 2px solid #a00000;
+            box-shadow: 0 0 18px rgba(255, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .fixed-bottom-right {
+            background: rgba(10, 0, 0, 0.95);
+            padding: 14px;
+            border-radius: 14px;
+            border: 3px solid #ff0000;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .current-wait-display {
+            font-size: 2.6rem;
+            font-weight: bold;
+            color: #ff0000;
+            background: #000000;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            text-align: center;
+            box-sizing: border-box;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            text-shadow: 0 0 15px #ff0000;
+            font-family: inherit;
+        }
+
+        .btn {
+            background: #990000;
+            color: #ffffff;
+            border: 1px solid #ff3333;
+            padding: 16px;
+            font-size: 1.3rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.2s;
+            letter-spacing: 2px;
+            font-family: inherit;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .btn:hover {
+            background: #cc0000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        .btn-finish {
+            background: #006622;
+            border-color: #00ff66;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .btn-finish:hover {
+            background: #009933;
+            box-shadow: 0 0 15px #00ff66;
+        }
+
+        .btn-cancel {
+            background: #550000;
+            border: 1px solid #ff4d4d;
+            color: #ffaaaa;
+            padding: 10px 20px;
+            font-size: 1.05rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-cancel:hover {
+            background: #990000;
+            color: #ffffff;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .btn-tab {
+            background: #111;
+            color: #ff8888;
+            border: 2px solid #880000;
+            padding: 12px 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 1px;
+            word-break: keep-all;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-tab.active {
+            background: #880000;
+            color: #ffffff;
+            border-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+        }
+
+        .ticket-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(30, 0, 0, 0.95);
+            border-radius: 8px;
+            text-align: center;
+            border: 2px dashed #ff0000;
+            display: none;
+            color: #ffffff;
+        }
+
+        .ticket-number {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 0 0 15px #ff0000;
+        }
+
+        .wait-time-highlight {
+            font-size: 1.4rem;
+            color: #ffaaaa;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .candidate-item {
+            background: rgba(40, 0, 0, 0.85);
+            border: 1px solid #ff4d4d;
+            border-radius: 8px;
+            padding: 12px 15px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .admin-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: rgba(40, 0, 0, 0.8);
+            border: 1px solid #ff3333;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .num {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ff3333;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            min-width: 500px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #550000;
+            padding: 10px 4px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: rgba(50, 0, 0, 0.9);
+            color: #ff8888;
+        }
+
+        td {
+            color: #ffffff;
+        }
+
+        .status-waiting {
+            color: #ff4d4d;
+            font-weight: bold;
+        }
+
+        .status-called {
+            color: #00ff66;
+            font-weight: bold;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border: 1px solid #00ff66;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #00ff66;
+            background: #003311;
+            font-weight: bold;
+            font-family: inherit;
+        }
+
+        .action-btn-absent {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border: 1px solid #ff4d4d;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #ff8888;
+            background: #440000;
+            font-weight: bold;
+            font-family: inherit;
+            margin-left: 4px;
+        }
+
+        .btn-danger {
+            background: #440000;
+            color: #ff6666;
+            border: 1px solid #aa0000;
+            margin-top: 20px;
+        }
+
+        .time-input-sm {
+            width: 55px;
+            padding: 4px;
+            text-align: center;
+            background: #000;
+            color: #fff;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        #sync-status {
+            position: fixed;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #ff0000;
+            color: #ffaaaa;
+            padding: 3px 12px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 992px) {
+            body {
+                padding: 15px;
+                padding-top: 45px;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .fixed-top-left {
+                position: static;
+                width: 100%;
+                max-height: 250px;
+                margin-bottom: 15px;
+                order: 2;
+            }
+
+            .fixed-right-container {
+                position: static;
+                width: 100%;
+                margin-bottom: 15px;
+                gap: 15px;
+                order: 1;
+            }
+
+            .fixed-top-right .number {
+                font-size: 3.5rem;
+            }
+
+            .right-panel-logo {
+                max-height: 120px;
+            }
+
+            .tab-bar {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .btn-tab {
+                font-size: 0.9rem;
+                padding: 10px 8px;
+            }
+
+            .admin-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sync-status">📡 スプレッドシート接続中...</div>
+
+    <div class="container">
+        <!-- 📍 タブ切替 -->
+        <div class="tab-bar">
+            <button class="btn-tab active" id="tab-btn-public" onclick="switchView('public')">受付・発券</button>
+            <button class="btn-tab" id="tab-btn-verify" onclick="switchView('verify')">案内確認/キャンセル</button>
+            <button class="btn-tab" id="tab-btn-admin" onclick="switchView('admin')">管理(要Pass)</button>
+        </div>
+
+        <!-- 📍 右側パネル -->
+        <div class="fixed-right-container">
+            <div class="fixed-top-right">
+                <div class="title">次の呼び出し番号</div>
+                <div class="number" id="next-call-number">-</div>
+            </div>
+
+            <div class="fixed-logo-middle">
+                <img src="logo.jpg" alt="『死校』ロゴ" class="right-panel-logo">
+            </div>
+
+            <div class="fixed-bottom-right">
+                <label>現在の受付時待ち時間</label>
+                <div class="current-wait-display" id="current-wait-time">約 0 分</div>
+            </div>
+        </div>
+
+        <!-- 📍 左側パネル -->
+        <div class="fixed-top-left">
+            <div class="title">待機中リスト</div>
+            <div id="wait-list-container"></div>
+        </div>
+
+        <!-- ================= 画面 1: 受付・発券 ================= -->
+        <div id="view-public">
+            <div class="card">
+                <h2>『死校』受付ー整理券番号発行</h2>
+                
+                <div class="notice-box">
+                    <ul>
+                        <li><span class="word-chunk">整理券番号とお名前をお控えいただき、そちらの番号でお呼び出しいたします。</span></li>
+                        <li><span class="word-chunk">表示されている待ち時間は目安となりますのでお早めにお越しください。</span></li>
+                    </ul>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group" style="flex: 2;">
+                        <label for="customer-name">お名前</label>
+                        <input type="text" id="customer-name" class="input-field" placeholder="例：巣園太郎">
+                    </div>
+                    <div class="input-group">
+                        <label for="customer-count">人数 (名)</label>
+                        <input type="number" id="customer-count" class="input-field" value="1" min="1">
+                    </div>
+                </div>
+
+                <button class="btn" onclick="issueTicket()">整理券を発行する</button>
+
+                <div class="ticket-result" id="ticket-result">
+                    <div>発券が完了しました</div>
+                    <div class="ticket-number" id="res-number"></div>
+                    <div id="res-name" style="font-size: 1.2rem; margin-top: 5px;"></div>
+                    <div class="wait-time-highlight" id="res-wait-time"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 画面 2: 案内確認/キャンセル ================= -->
+        <div id="view-verify" style="display: none;">
+            <div class="card">
+                <h2>案内確認 / 予約キャンセル</h2>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="verify-num">整理券番号</label>
+                        <input type="number" id="verify-num" class="input-field" placeholder="例：1">
+                    </div>
+                    <div class="input-group">
+                        <label for="verify-name">お名前</label>
+                        <input type="text" id="verify-name" class="input-field" placeholder="例：巣園太郎">
+                    </div>
+                </div>
+                <button class="btn" onclick="verifyCustomer()">照合する</button>
+
+                <div class="ticket-result" id="verify-result"></div>
+            </div>
+        </div>
+
+        <!-- ================= 画面 3: 管理システム ================= -->
+        <div id="view-admin" style="display: none;">
+            <div class="card">
+                <h3>スタッフ用 管理システム</h3>
+
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div style="font-size: 0.85rem; color: #ffaaaa;">本日の総来客人数</div>
+                        <div class="num" id="stat-total-visitors">0 名</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size: 0.85rem; color: #ffaaaa;">案内完了人数</div>
+                        <div class="num" style="color: #00ff66;" id="stat-served-visitors">0 名</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-finish" onclick="finishCurrentTurn()">
+                    ✓ 現在の体験終了（案内完了＆繰り上げ）
+                </button>
+
+                <div style="background: rgba(40, 0, 0, 0.6); padding: 12px; border-radius: 8px; border: 1px solid #ff0000; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <label style="margin: 0; font-size: 0.9rem;">デフォルト所要時間(分):</label>
+                    <input type="number" id="admin-default-time" class="input-field" style="width: 70px; text-align: center;" value="10" min="1" onchange="updateDefaultTime(this.value)">
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>番号</th>
+                                <th>お名前</th>
+                                <th>人数</th>
+                                <th>所要時間</th>
+                                <th>目安待ち時間</th>
+                                <th>状態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-ticket-list-body"></tbody>
+                    </table>
+                </div>
+
+                <button class="btn btn-danger" onclick="clearAllData()">本日のデータを全消去（要パスワード）</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 📍 ご提示いただいたWebアプリURLを設定済み
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvR0C5bnV-DTWHL5RiOFyyooNzOGNOsix3G2JEaBzxi7CDirL8FErJT_WMpxnzN7JyoQ/exec";
+
+        const ADMIN_PASSWORD = "1234";
+
+        let ticketList = [];
+        let currentCount = 0;
+        let defaultReqTime = 10;
+        let isFetching = false;
+
+        async function fetchServerData(actionParams = {}) {
+            if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("ここに_GAS_")) {
+                document.getElementById('sync-status').textContent = "🔴 GASのWebアプリURLを設定してください";
+                return;
+            }
+
+            try {
+                const query = new URLSearchParams({ action: 'getData', ...actionParams }).toString();
+                const res = await fetch(`${GAS_WEB_APP_URL}?${query}`);
+                const json = await res.json();
+
+                if (json.success && json.data) {
+                    ticketList = json.data.ticketList || [];
+                    currentCount = json.data.currentCount || 0;
+                    defaultReqTime = json.data.defaultReqTime || 10;
+                    
+                    document.getElementById('admin-default-time').value = defaultReqTime;
+                    document.getElementById('sync-status').textContent = "🟢 スプレッドシート連携中";
+                    renderAll();
+                } else if (json.error) {
+                    document.getElementById('sync-status').textContent = `🔴 エラー: ${json.error}`;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('sync-status').textContent = "🟡 同期中 / 通信確認中...";
+            }
+        }
+
+        setInterval(() => {
+            if (!isFetching) fetchServerData();
+        }, 3000);
+
+        window.onload = () => fetchServerData();
+
+        function switchView(viewName) {
+            if (viewName === 'admin') {
+                const pass = prompt('管理システムに入るにはパスワードを入力してください：');
+                if (pass === null) return;
+                if (pass !== ADMIN_PASSWORD) {
+                    alert('パスワードが違います。');
+                    return;
+                }
+            }
+
+            document.getElementById('view-public').style.display = viewName === 'public' ? 'block' : 'none';
+            document.getElementById('view-verify').style.display = viewName === 'verify' ? 'block' : 'none';
+            document.getElementById('view-admin').style.display = viewName === 'admin' ? 'block' : 'none';
+
+            document.getElementById('tab-btn-public').classList.toggle('active', viewName === 'public');
+            document.getElementById('tab-btn-verify').classList.toggle('active', viewName === 'verify');
+            document.getElementById('tab-btn-admin').classList.toggle('active', viewName === 'admin');
+        }
+
+        async function issueTicket() {
+            const nameInput = document.getElementById('customer-name');
+            const countInput = document.getElementById('customer-count');
+
+            const name = nameInput.value.trim();
+            const count = parseInt(countInput.value, 10) || 1;
+
+            if (!name) {
+                alert('お名前を入力してください。');
+                return;
+            }
+
+            document.getElementById('sync-status').textContent = "⏳ 発券処理中...";
+            await fetchServerData({ action: 'issue', name: name, count: count });
+
+            const newTicket = ticketList[ticketList.length - 1];
+            const waitTime = calculateCurrentTotalWait();
+
+            if (newTicket) {
+                document.getElementById('res-number').textContent = `${newTicket.id}番`;
+                document.getElementById('res-name').textContent = `${newTicket.name} 様 (${newTicket.count}名)`;
+                document.getElementById('res-wait-time').textContent = `目安の待ち時間: 約 ${waitTime} 分`;
+                document.getElementById('ticket-result').style.display = 'block';
+            }
+
+            nameInput.value = '';
+            countInput.value = '1';
+        }
+
+        async function finishCurrentTurn() {
+            document.getElementById('sync-status').textContent = "⏳ 繰り上げ中...";
+            await fetchServerData({ action: 'finishTurn' });
+        }
+
+        async function updateDefaultTime(val) {
+            await fetchServerData({ action: 'setDefaultTime', time: val });
+        }
+
+        async function changeReqTime(id, val) {
+            await fetchServerData({ action: 'updateReqTime', id: id, reqTime: val });
+        }
+
+        async function cancelTicket(id) {
+            if (confirm('本当にこの予約をキャンセルしますか？')) {
+                await fetchServerData({ action: 'updateStatus', id: id, status: 'キャンセル' });
+                const ticket = ticketList.find(t => t.id === id);
+                if (ticket) {
+                    const resDiv = document.getElementById('verify-result');
+                    resDiv.style.borderColor = '#888888';
+                    resDiv.innerHTML = `<div style="color: #ffaaaa; font-size: 1.3rem; font-weight: bold;">【${ticket.id}番 ${escapeHtml(ticket.name)} 様】<br>予約をキャンセルいたしました。</div>`;
+                }
+            }
+        }
+
+        async function cancelNoShow(id) {
+            if (confirm('到着時間を経過したため、この整理券を不在キャンセルとしますか？')) {
+                await fetchServerData({ action: 'updateStatus', id: id, status: '不在キャンセル' });
+            }
+        }
+
+        async function toggleStatus(id) {
+            const ticket = ticketList.find(t => t.id === id);
+            if (ticket) {
+                let newStatus = ticket.status === '待機中' ? '呼び出し中' : '案内済み';
+                await fetchServerData({ action: 'updateStatus', id: id, status: newStatus });
+            }
+        }
+
+        async function clearAllData() {
+            const inputPass = prompt('データを消去するにはパスワードを入力してください：');
+            if (inputPass === null) return;
+            if (inputPass !== ADMIN_PASSWORD) {
+                alert('パスワードが違います。');
+                return;
+            }
+
+            if (confirm('すべての整理券データを消去しますか？（スプレッドシートの全内容が削除されます）')) {
+                await fetchServerData({ action: 'clearAll' });
+                document.getElementById('ticket-result').style.display = 'none';
+                document.getElementById('verify-result').style.display = 'none';
+            }
+        }
+
+        function verifyCustomer() {
+            const numVal = parseInt(document.getElementById('verify-num').value, 10);
+            const nameVal = document.getElementById('verify-name').value.trim();
+            const resDiv = document.getElementById('verify-result');
+
+            if (!numVal && !nameVal) {
+                alert('「整理券番号」または「お名前」を入力してください。');
+                return;
+            }
+
+            let matches = [];
+            if (numVal) {
+                matches = ticketList.filter(t => t.id === numVal);
+            } else if (nameVal) {
+                matches = ticketList.filter(t => t.name === nameVal);
+            }
+
+            resDiv.style.display = 'block';
+
+            if (matches.length === 0) {
+                resDiv.style.borderColor = '#ff0000';
+                resDiv.innerHTML = '<div style="color: #ff4d4d; font-size: 1.3rem; font-weight: bold;">該当するデータが見つかりません。</div>';
+                return;
+            }
+
+            if (matches.length > 1) {
+                let html = `<div style="color: #ffaaaa; font-size: 1.1rem; font-weight: bold; margin-bottom: 12px;">同じお名前の予約が ${matches.length} 件見つかりました。<br>対象の番号を選択してください：</div>`;
+                html += '<div style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;">';
+                
+                matches.forEach(t => {
+                    html += `
+                        <div class="candidate-item" onclick="displaySingleCustomerResult(${t.id})">
+                            <div>
+                                <strong style="color: #ff3333; font-size: 1.25rem;">${t.id}番</strong>
+                                <span style="color: #ffffff; margin-left: 8px; font-size: 1.1rem;">${escapeHtml(t.name)} 様 (${t.count}名)</span>
+                            </div>
+                            <span style="color: #ff8888; font-size: 0.95rem; font-weight: bold;">[状態: ${t.status}] ➔ 選択</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                resDiv.style.borderColor = '#ff9900';
+                resDiv.innerHTML = html;
+            } else {
+                displaySingleCustomerResult(matches[0].id);
+            }
+        }
+
+        function displaySingleCustomerResult(ticketId) {
+            const ticket = ticketList.find(t => t.id === ticketId);
+            const resDiv = document.getElementById('verify-result');
+
+            if (!ticket) return;
+
+            resDiv.style.display = 'block';
+
+            if (ticket.status === '呼び出し中') {
+                resDiv.style.borderColor = '#00ff66';
+                resDiv.innerHTML = `
+                    <div style="color: #00ff66; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 20px #00ff66; letter-spacing: 2px;">【${ticket.id}番 ${escapeHtml(ticket.name)} 様】<br>お進みください</div>
+                    <button class="btn-cancel" onclick="cancelTicket(${ticket.id})">この予約をキャンセルする</button>
+                `;
+            } else if (ticket.status === '待機中') {
+                resDiv.style.borderColor = '#ff9900';
+                resDiv.innerHTML = `
+                    <div style="color: #ff9900; font-size: 1.3rem; font-weight: bold;">【${ticket.id}番 ${escapeHtml(ticket.name)} 様】<br>まだ呼び出されていません。順番までお待ちください。</div>
+                    <button class="btn-cancel" onclick="cancelTicket(${ticket.id})">この予約をキャンセルする</button>
+                `;
+            } else if (ticket.status === 'キャンセル' || ticket.status === '不在キャンセル') {
+                resDiv.style.borderColor = '#888888';
+                resDiv.innerHTML = `<div style="color: #aaaaaa; font-size: 1.3rem; font-weight: bold;">【${ticket.id}番 ${escapeHtml(ticket.name)} 様】<br>この予約はキャンセルされています。</div>`;
+            } else {
+                resDiv.style.borderColor = '#888888';
+                resDiv.innerHTML = `<div style="color: #aaaaaa; font-size: 1.3rem; font-weight: bold;">【${ticket.id}番 ${escapeHtml(ticket.name)} 様】<br>すでに案内完了済みの整理券です。</div>`;
+            }
+        }
+
+        function calculateCurrentTotalWait() {
+            let total = 0;
+            for (const ticket of ticketList) {
+                if (ticket.status === '待機中' || ticket.status === '呼び出し中') {
+                    const time = parseInt(ticket.reqTime, 10);
+                    if (!isNaN(time)) {
+                        total += time;
+                    }
+                }
+            }
+            return total;
+        }
+
+        function renderAll() {
+            renderWaitList();
+            renderAdminTable();
+            renderAdminStats();
+
+            const currentWait = calculateCurrentTotalWait();
+            document.getElementById('current-wait-time').textContent = `約 ${currentWait} 分`;
+
+            const nextTicket = ticketList.find(t => t.status === '呼び出し中') || ticketList.find(t => t.status === '待機中');
+            document.getElementById('next-call-number').textContent = nextTicket ? `${nextTicket.id}番` : '-';
+        }
+
+        function renderAdminStats() {
+            const totalVisitors = ticketList
+                .filter(t => t.status !== 'キャンセル' && t.status !== '不在キャンセル')
+                .reduce((sum, t) => sum + (parseInt(t.count, 10) || 1), 0);
+
+            const servedVisitors = ticketList
+                .filter(t => t.status === '案内済み')
+                .reduce((sum, t) => sum + (parseInt(t.count, 10) || 1), 0);
+
+            document.getElementById('stat-total-visitors').textContent = `${totalVisitors} 名`;
+            document.getElementById('stat-served-visitors').textContent = `${servedVisitors} 名`;
+        }
+
+        function renderWaitList() {
+            const container = document.getElementById('wait-list-container');
+            container.innerHTML = '';
+
+            const activeTickets = ticketList.filter(t => t.status === '待機中' || t.status === '呼び出し中');
+
+            if (activeTickets.length === 0) {
+                container.innerHTML = '<div style="color: #888; text-align: center; font-size: 0.95rem; padding: 15px 0;">待機中のグループはありません</div>';
+                return;
+            }
+
+            let accumulatedWait = 0;
+
+            activeTickets.forEach(t => {
+                const item = document.createElement('div');
+                const isCalling = t.status === '呼び出し中';
+                item.className = `wait-list-item ${isCalling ? 'calling' : ''}`;
+
+                let waitText = '';
+                if (isCalling) {
+                    waitText = '案内中';
+                    accumulatedWait += parseInt(t.reqTime, 10) || 0;
+                } else {
+                    waitText = `目安: 約 ${accumulatedWait} 分`;
+                    accumulatedWait += parseInt(t.reqTime, 10) || 0;
+                }
+
+                item.innerHTML = `
+                    <div class="row-top">
+                        <span class="num">${t.id}番</span>
+                        <span class="name">${escapeHtml(t.name)} 様 (${t.count}名)</span>
+                    </div>
+                    <div class="wait-time">${waitText}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-ticket-list-body');
+            tbody.innerHTML = '';
+
+            if (ticketList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: #888888;">データはありません</td></tr>';
+                return;
+            }
+
+            let accumulatedWait = 0;
+
+            ticketList.forEach(ticket => {
+                const tr = document.createElement('tr');
+                const validReqTime = parseInt(ticket.reqTime, 10) || 0;
+                const validCount = parseInt(ticket.count, 10) || 1;
+                
+                let statusClass = 'status-waiting';
+                if (ticket.status === '呼び出し中') statusClass = 'status-called';
+                if (ticket.status === '案内済み' || ticket.status.includes('キャンセル')) statusClass = '';
+
+                let btnText = '呼び出す';
+                if (ticket.status === '呼び出し中') btnText = '完了';
+
+                let waitText = '-';
+                if (ticket.status === '呼び出し中') {
+                    waitText = '案内中';
+                    accumulatedWait += validReqTime;
+                } else if (ticket.status === '待機中') {
+                    waitText = `約 ${accumulatedWait} 分`;
+                    accumulatedWait += validReqTime;
+                }
+
+                const isActive = (ticket.status === '待機中' || ticket.status === '呼び出し中');
+
+                tr.innerHTML = `
+                    <td><strong>${ticket.id}番</strong></td>
+                    <td>${escapeHtml(ticket.name)}</td>
+                    <td>${validCount}名</td>
+                    <td>
+                        <input type="number" class="time-input-sm" value="${validReqTime}" min="1" onchange="changeReqTime(${ticket.id}, this.value)"> 分
+                    </td>
+                    <td>${waitText}</td>
+                    <td class="${statusClass}">${ticket.status}</td>
+                    <td>
+                        ${isActive 
+                            ? `<button class="action-btn" onclick="toggleStatus(${ticket.id})">${btnText}</button>
+                               <button class="action-btn-absent" onclick="cancelNoShow(${ticket.id})">不在取消</button>` 
+                            : '完了'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
